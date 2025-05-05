@@ -6,7 +6,7 @@ int mp[1005][1005];
 int main(int argc, char **argv) {
     int seed = stoi(argv[1]);
     mt19937 rnd(seed);
-    int T = 1000;
+    int T = 300000;
     const int xlim = 1000, ylim = 1000;
     cout << T << '\n';
     while(T--) {

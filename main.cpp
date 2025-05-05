@@ -53,7 +53,7 @@ int main() {
     cin.sync_with_stdio(false), cin.tie(0);
     int T; cin >> T;
     // is_cover: when submit, upd to 0
-    BPTdatabase<mystr, int, 0, 5> database("BPT");
+    BPTdatabase<mystr, int, 0, 55> database("BPT");
     while(T--) {
         string op; cin >> op;
         // cerr << "opt done" << T << ' ' << op << '\n';
