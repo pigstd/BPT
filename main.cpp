@@ -49,28 +49,41 @@ public:
     }
 };
 
+#define ll long long
+#define i128 __int128
+
+const i128 Mod = 99234523452349217;
+const i128 base = 998244353;
+
+ll hs(string s) {
+    i128 hs = 0;
+    for (auto ch : s)
+        hs = (hs * base + (int)(ch) + 1) % Mod;
+    return hs;
+}
+
 int main() {
     cin.sync_with_stdio(false), cin.tie(0);
     int T; cin >> T;
     // is_cover: when submit, upd to 0
-    BPTdatabase<mystr, int, 0, 113> database("BPT");
+    BPTdatabase<ll, int, 0, 113> database("BPT");
     while(T--) {
         string op; cin >> op;
         // cerr << "opt done" << T << ' ' << op << '\n';
         if (op == "insert") {
             string index; int value;
             cin >> index >> value;
-            database.insert(index, value);
+            database.insert(hs(index), value);
         }
         else if (op == "delete") {
             string index; int value;
             cin >> index >> value;
-            database.del(index, value);
+            database.del(hs(index), value);
         }
         else if (op == "find") {
             string index;
             cin >> index;
-            auto v = database.find_with_vector(index);
+            auto v = database.find_with_vector(hs(index));
             if (v.size() == 0) cout << "null\n";
             else {
                 for (auto x : v) cout << x << ' ';
