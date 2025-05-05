@@ -41,12 +41,18 @@ public:
             if (ch[i] != b.ch[i]) return ch[i] <= b.ch[i];
         return len <= b.len;
     }
+    // 转化为 string
+    operator string() {
+        string res = "";
+        for (int i = 0; i < len; i++) res += ch[i];
+        return res;
+    }
 };
 
 int main() {
     int T; cin >> T;
     // is_cover: when submit, upd to 0
-    BPTdatabase<mystr, int, 0, 4> database("BPT");
+    BPTdatabase<mystr, int, 1, 3> database("BPT");
     while(T--) {
         // cerr << "opt done" << endl;
         string op; cin >> op;
@@ -70,6 +76,9 @@ int main() {
                 cout << '\n';
             }
         }
+        // cerr << "-----------\n";
+        // database.print_tree();
+        // cerr << "-----------\n";
         // cerr << "opt done\n" << endl;
     }
 }

@@ -33,7 +33,10 @@ class BPTdatabase {
         data key[MAXB];
         int ptr[MAXB + 1];
         int parent;
-        tree() = default;
+        tree() : is_leaf(false), size(0), parent(-1) {
+            for (int i = 0; i < MAXB; i++) key[i] = data();
+            for (int i = 0; i <= MAXB; i++) ptr[i] = 0;
+        }
         // 加入 key = _data, 对应的 ptr 为 nptr 的节点
         void insertdata(data _data, int nptr = 0) {
             int pos = size;
@@ -59,10 +62,12 @@ class BPTdatabase {
             key[0] = _data, ptr[0] = nptr;
             size++;
         }
-        // 删掉第 pos 个 key
-        void erase(int pos) {
-            for (int i = pos; i + 1 < size; i++)
-                key[i] = key[i + 1], ptr[i + 1] = ptr[i + 2];
+        // 删掉第 posk 个 key 和第 posp 个 ptr
+        void erase(int posk, int posp) {
+            for (int i = posp; i + 1 < size; i++)
+                key[i] = key[i + 1];
+            for (int i = posp; i + 1 <= size; i++)
+                ptr[i] = ptr[i + 1];
             ptr[size] = 0, key[size - 1] = data();
             size--;
         }
@@ -163,7 +168,7 @@ class BPTdatabase {
                 return;
             }
             file.Delete(cursor.ptr[id]);
-            cursor.erase(id - 1);
+            cursor.erase(id - 1, id);
             file.update(cursor, ptr);
             if (cursor.size == 0) {
                 // 如果根节点只有一个儿子，直接把儿子变成新的根节点
@@ -174,7 +179,7 @@ class BPTdatabase {
             }
             return;
         }
-        cursor.erase(id - 1);
+        cursor.erase(id - 1, id);
         if (cursor.size >= MAXB / 2) {
             file.update(cursor, ptr);
             return;
@@ -191,7 +196,7 @@ class BPTdatabase {
                 data firstkey = Rsibling.key[0];
                 int firstptr = Rsibling.ptr[0];
                 data head = parent.key[0];
-                Rsibling.erase(0);
+                Rsibling.erase(0, 0);
                 cursor.appenddata(head, firstptr);
                 parent.key[0] = firstkey;
                 file.update(Rsibling, parent.ptr[sonid + 1]);
@@ -291,7 +296,7 @@ public:
         for (int i = 0; i < cursor.size; i++)
             if (cursor.key[i] == _data) pos = i;
         if (pos == -1) return; // not found
-        cursor.erase(pos);
+        cursor.erase(pos, pos);
         if (cursor.parent == -1) {
             if (cursor.size == 0) {
                 file.Delete(rt);
@@ -310,11 +315,13 @@ public:
         for (int i = 0; i <= parent.size; i++)
             if (parent.ptr[i] == ptr) sonid = i;
         assert(sonid != -1);
+        // std::cerr << "del, sonid = " << sonid << '\n';
+        // std::cerr << cursor.size << ' ' << cursor.ptr[0] << '\n';
         if (sonid == 0) {
             tree Rsibling; file.read(Rsibling, parent.ptr[sonid + 1]);
             if (Rsibling.size >= MAXB / 2 + 1) {
                 data first = Rsibling.key[0];
-                Rsibling.erase(0);
+                Rsibling.erase(0, 0);
                 cursor.appenddata(first);
                 parent.key[sonid] = Rsibling.key[0];
                 file.update(Rsibling, parent.ptr[sonid + 1]);
@@ -337,7 +344,7 @@ public:
             tree Lsibling; file.read(Lsibling, parent.ptr[sonid - 1]);
             if (Lsibling.size >= MAXB / 2 + 1) {
                 data last = Lsibling.key[Lsibling.size - 1];
-                Lsibling.erase(Lsibling.size - 1);
+                Lsibling.erase(Lsibling.size - 1, Lsibling.size - 1);
                 cursor.push_frontdata(last);
                 parent.key[sonid - 1] = cursor.key[0];
                 file.update(Lsibling, parent.ptr[sonid - 1]);
@@ -386,6 +393,30 @@ public:
             ptr = cursor.ptr[cursor.size];
         }
         return res;
+    }
+    // debug 的时候使用，输出整个树的结构
+    void print_tree(int now) {
+        if (now == -1) return;
+        tree t; file.read(t, now);
+        std::cerr << "ptr = " << now <<
+        ", is_leaf = " << t.is_leaf << ", size = " << t.size << '\n';
+        std::cerr << "key: \n";
+        for (int i = 0; i < t.size; i++)
+            std::cerr << "(" << std::string(t.key[i].key) << ", " << t.key[i].value << ") |";
+        std::cerr << "\n";
+        std::cerr << "ptr: \n";
+        for (int i = 0; i <= t.size; i++)
+            std::cerr << t.ptr[i] << ' ';
+        std::cerr << "\n";
+        if (!t.is_leaf) {
+            for (int i = 0; i <= t.size; i++)
+                print_tree(t.ptr[i]);
+        }
+    }
+    // debug 的时候使用，输出整个树的结构
+    void print_tree() {
+        int rt = getrt();
+        print_tree(rt);
     }
 };
 
