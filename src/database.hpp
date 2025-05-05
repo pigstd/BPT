@@ -92,15 +92,17 @@ class BPTdatabase {
     // 从根到节点的 tree
     vector<tree> vectree;
     MemoryRiver<tree, 1> file;
+    int rt;
     // 获得根
     int getrt() {
-        int rt;
-        file.get_info(rt, 1);
+        // int rt;
+        // file.get_info(rt, 1);
         return rt;
     }
     // 修改根
     void updrt(int rt) {
-        file.write_info(rt, 1);
+        rt = this->rt;
+        // file.write_info(rt, 1);
     }
     // 修改 ptr 位置的 parent
     // void upd_parent(int ptr, int parent) {
@@ -263,6 +265,10 @@ class BPTdatabase {
 public:
     BPTdatabase(string filename = "") {
         file.initialise(filename, -1, is_cover);
+        file.get_info(rt, 1);
+    }
+    ~BPTdatabase() {
+        file.write_info(rt, 1);
     }
     void insert(const Key &key, const Value &value) {
         int rt = getrt();

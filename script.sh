@@ -10,7 +10,7 @@ echo generated
 
 cd .. && cd build
 
-cmake .. && make && ./code < ../testdata/4.in
+cmake .. && make && time ./code < ../testdata/4.in
 
 rm BPT
 
