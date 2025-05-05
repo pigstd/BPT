@@ -38,7 +38,7 @@ class BPTdatabase {
             for (int i = 0; i <= MAXB; i++) ptr[i] = 0;
         }
         // 加入 key = _data, 对应的 ptr 为 nptr 的节点
-        void insertdata(data _data, int nptr = 0) {
+        void insertdata(data _data, int nptr) {
             int pos = size;
             for (int i = 0; i < size; i++)
                 if (_data < key[i]) {
@@ -48,6 +48,21 @@ class BPTdatabase {
             for (int i = size - 1; i >= pos; i--)
                 key[i + 1] = key[i], ptr[i + 2] = ptr[i + 1];
             key[pos] = _data; ptr[pos + 1] = nptr;
+            size++;
+        }
+        // 在叶子处加入 key = _data 的节点
+        void insertdata_leaf(data _data) {
+            int pos = size;
+            for (int i = 0; i < size; i++)
+                if (_data < key[i]) {
+                    pos = i;
+                    break;
+                }
+            for (int i = size - 1; i >= pos; i--)
+                key[i + 1] = key[i];
+            key[pos] = _data;
+            ptr[size + 1] = ptr[size];
+            ptr[size] = 0;
             size++;
         }
         // 加入 key = _data, 对应的 ptr 为 nptr 的节点插入到最后
@@ -87,7 +102,7 @@ class BPTdatabase {
     void upd_parent(int ptr, int parent) {
         tree son; file.read(son, ptr);
         son.parent = parent;
-        file.update(son, parent);
+        file.update(son, ptr);
     }
     // ptr 加入 (data, nptr)
     void insertInternal(int ptr, data _data, int nptr) {
@@ -100,6 +115,7 @@ class BPTdatabase {
         tree Ls, Rs;
         Ls.is_leaf = Rs.is_leaf = false;
         int ptrR = file.write(Rs);
+        // std::cerr << "!!! ptrR = " << ptrR << '\n';
         cursor.insertdata(_data, nptr);
         // new key size = MAXB
         Ls.size = MAXB / 2, Rs.size = MAXB - 1 - MAXB / 2;
@@ -132,7 +148,10 @@ class BPTdatabase {
         tree Ls, Rs;
         Ls.is_leaf = Rs.is_leaf = true;
         int ptrR = file.write(Rs);
-        cursor.insertdata(_data);
+        cursor.insertdata_leaf(_data);
+        // std::cerr << "!! split!\n";
+        // for (int i = 0; i <= cursor.size; i++) std::cerr << cursor.ptr[i] << ' ';
+        // std::cerr << '\n';
         Ls.size = MAXB / 2, Rs.size = MAXB - MAXB / 2;
         for (int i = 0; i < MAXB; i++)
             if (i < Ls.size) Ls.key[i] = cursor.key[i];
@@ -270,7 +289,7 @@ public:
             file.read(cursor, ptr);
         }
         if (cursor.size < MAXB - 1) {
-            cursor.insertdata(_data);
+            cursor.insertdata_leaf(_data);
             file.update(cursor, ptr);
             return;
         }
@@ -322,7 +341,10 @@ public:
             if (Rsibling.size >= MAXB / 2 + 1) {
                 data first = Rsibling.key[0];
                 Rsibling.erase(0, 0);
-                cursor.appenddata(first);
+                // std::cerr << "Case!! " << cursor.size << ' ' << cursor.ptr[cursor.size] << '\n';
+                int appendptr = cursor.ptr[cursor.size];
+                cursor.ptr[cursor.size] = 0;
+                cursor.appenddata(first, appendptr);
                 parent.key[sonid] = Rsibling.key[0];
                 file.update(Rsibling, parent.ptr[sonid + 1]);
                 file.update(cursor, ptr);
@@ -398,7 +420,7 @@ public:
     void print_tree(int now) {
         if (now == -1) return;
         tree t; file.read(t, now);
-        std::cerr << "ptr = " << now <<
+        std::cerr << "ptr = " << now << " parent = " << t.parent << 
         ", is_leaf = " << t.is_leaf << ", size = " << t.size << '\n';
         std::cerr << "key: \n";
         for (int i = 0; i < t.size; i++)
