@@ -99,11 +99,11 @@ class BPTdatabase {
         file.write_info(rt, 1);
     }
     // 修改 ptr 位置的 parent
-    void upd_parent(int ptr, int parent) {
-        tree son; file.read(son, ptr);
-        son.parent = parent;
-        file.update(son, ptr);
-    }
+    // void upd_parent(int ptr, int parent) {
+    //     tree son; file.read(son, ptr);
+    //     son.parent = parent;
+    //     file.update(son, ptr);
+    // }
     // ptr 加入 (data, nptr)
     void insertInternal(int ptr, data _data, int nptr) {
         // std::cerr << "start insert internal\n";
@@ -128,10 +128,10 @@ class BPTdatabase {
         Ls.ptr[Ls.size] = cursor.ptr[Ls.size];
         for (int i = Ls.size + 1, j = 0; i < MAXB; i++, j++) {
             Rs.key[j] = cursor.key[i], Rs.ptr[j] = cursor.ptr[i];
-            upd_parent(Rs.ptr[j], ptrR);
+            // upd_parent(Rs.ptr[j], ptrR);
         }
         Rs.ptr[Rs.size] = cursor.ptr[cursor.size];
-        upd_parent(Rs.ptr[Rs.size], ptrR);
+        // upd_parent(Rs.ptr[Rs.size], ptrR);
         if (cursor.parent == -1) {
             // cursor is root
             tree newroot; newroot.is_leaf = false;
@@ -196,7 +196,7 @@ class BPTdatabase {
                 // 如果根节点只有一个儿子，直接把儿子变成新的根节点
                 int sonptr = cursor.ptr[0];
                 file.Delete(ptr);
-                upd_parent(sonptr, -1);
+                // upd_parent(sonptr, -1);
                 updrt(sonptr);
             }
             return;
@@ -220,7 +220,7 @@ class BPTdatabase {
                 int firstptr = Rsibling.ptr[0];
                 data head = parent.key[0];
                 Rsibling.erase(0, 0);
-                upd_parent(firstptr, ptr);
+                // upd_parent(firstptr, ptr);
                 cursor.appenddata(head, firstptr);
                 parent.key[0] = firstkey;
                 file.update(Rsibling, parent.ptr[sonid + 1]);
@@ -231,10 +231,10 @@ class BPTdatabase {
             else {
                 data head = parent.key[0];
                 cursor.appenddata(head, Rsibling.ptr[0]);
-                upd_parent(Rsibling.ptr[0], ptr);
+                // upd_parent(Rsibling.ptr[0], ptr);
                 for (int i = 0; i < Rsibling.size; i++)
-                    cursor.appenddata(Rsibling.key[i], Rsibling.ptr[i + 1]),
-                    upd_parent(Rsibling.ptr[i + 1], ptr);
+                    cursor.appenddata(Rsibling.key[i], Rsibling.ptr[i + 1]);
+                    // upd_parent(Rsibling.ptr[i + 1], ptr);
                 file.Delete(parent.ptr[sonid + 1]);
                 file.update(cursor, ptr);
                 deleteInternal(parentptr, sonid + 1);
@@ -247,7 +247,7 @@ class BPTdatabase {
                 int lastptr = Lsibling.ptr[Lsibling.size];
                 data head = parent.key[sonid - 1];
                 Lsibling.erase(Lsibling.size - 1, Lsibling.size);
-                upd_parent(lastptr, ptr);
+                // upd_parent(lastptr, ptr);
                 cursor.push_frontdata(head, lastptr);
                 parent.key[sonid - 1] = lastkey;
                 file.update(Lsibling, parent.ptr[sonid - 1]);
@@ -258,10 +258,10 @@ class BPTdatabase {
             else {
                 data head = parent.key[sonid - 1];
                 Lsibling.appenddata(head, cursor.ptr[0]);
-                upd_parent(cursor.ptr[0], parent.ptr[sonid - 1]);
+                // upd_parent(cursor.ptr[0], parent.ptr[sonid - 1]);
                 for (int i = 0; i < cursor.size; i++)
-                    Lsibling.appenddata(cursor.key[i], cursor.ptr[i + 1]),
-                    upd_parent(cursor.ptr[i + 1], parent.ptr[sonid - 1]);
+                    Lsibling.appenddata(cursor.key[i], cursor.ptr[i + 1]);
+                    // upd_parent(cursor.ptr[i + 1], parent.ptr[sonid - 1]);
                 file.Delete(ptr);
                 file.update(Lsibling, parent.ptr[sonid - 1]);
                 deleteInternal(parentptr, sonid);
@@ -287,6 +287,7 @@ public:
             return;
         }
         tree cursor; file.read(cursor, rt);
+        if (cursor.parent != -1) cursor.parent = -1, file.update(cursor, rt);
         int ptr = rt;
         while(!cursor.is_leaf) {
             int pos = cursor.size;
@@ -296,9 +297,11 @@ public:
                     break;
                 }
             }
+            int parent = ptr;
             ptr = cursor.ptr[pos];
             // std::cerr << ptr << ' ';
             file.read(cursor, ptr);
+            if (cursor.parent != ptr) cursor.parent = ptr, file.update(cursor, ptr);
         }
         // std::cerr << "find!\n";
         if (cursor.size < MAXB - 1) {
@@ -313,6 +316,7 @@ public:
         data _data(key, value);
         if (rt == -1) return;
         tree cursor; file.read(cursor, rt);
+        if (cursor.parent != -1) cursor.parent = -1, file.update(cursor, rt);
         int ptr = rt;
         while(!cursor.is_leaf) {
             int pos = cursor.size;
@@ -321,8 +325,10 @@ public:
                     pos = i;
                     break;
                 }
+            int parent = ptr;
             ptr = cursor.ptr[pos];
             file.read(cursor, ptr);
+            if (cursor.parent != ptr) cursor.parent = ptr, file.update(cursor, ptr);
         }
         int pos = -1;
         for (int i = 0; i < cursor.size; i++)
