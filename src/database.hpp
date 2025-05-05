@@ -95,13 +95,14 @@ class BPTdatabase {
     int rt;
     // 获得根
     int getrt() {
+        // std::cerr << "rt " << rt << '\n';
         // int rt;
         // file.get_info(rt, 1);
         return rt;
     }
     // 修改根
     void updrt(int rt) {
-        rt = this->rt;
+        this->rt = rt;
         // file.write_info(rt, 1);
     }
     // 修改 ptr 位置的 parent

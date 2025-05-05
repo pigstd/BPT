@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
     mt19937 rnd(seed);
     int T = 300000;
     const int xlim = 10000, ylim = 10000;
-    cout << T << '\n';
+    cout << T + xlim << '\n';
     while(T--) {
         int x = rnd() % xlim + 1, y = rnd() % ylim + 1;
         int op = rnd() & 1;
@@ -27,4 +27,5 @@ int main(int argc, char **argv) {
             cout << "delete " << x << ' ' << y << '\n';
         }
     }
+    for (int i = 1; i <= xlim; i++) cout << "find " << i << '\n';
 }
