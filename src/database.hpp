@@ -79,7 +79,7 @@ class BPTdatabase {
         }
         // 删掉第 posk 个 key 和第 posp 个 ptr
         void erase(int posk, int posp) {
-            for (int i = posp; i + 1 < size; i++)
+            for (int i = posk; i + 1 < size; i++)
                 key[i] = key[i + 1];
             for (int i = posp; i + 1 <= size; i++)
                 ptr[i] = ptr[i + 1];
@@ -186,7 +186,6 @@ class BPTdatabase {
                 updrt(-1);
                 return;
             }
-            file.Delete(cursor.ptr[id]);
             cursor.erase(id - 1, id);
             file.update(cursor, ptr);
             if (cursor.size == 0) {
@@ -198,6 +197,7 @@ class BPTdatabase {
             }
             return;
         }
+        // std::cerr << "delInternal " << ptr << ' ' << id << '\n';
         cursor.erase(id - 1, id);
         if (cursor.size >= MAXB / 2) {
             file.update(cursor, ptr);
@@ -216,6 +216,7 @@ class BPTdatabase {
                 int firstptr = Rsibling.ptr[0];
                 data head = parent.key[0];
                 Rsibling.erase(0, 0);
+                upd_parent(firstptr, ptr);
                 cursor.appenddata(head, firstptr);
                 parent.key[0] = firstkey;
                 file.update(Rsibling, parent.ptr[sonid + 1]);
@@ -226,8 +227,10 @@ class BPTdatabase {
             else {
                 data head = parent.key[0];
                 cursor.appenddata(head, Rsibling.ptr[0]);
+                upd_parent(Rsibling.ptr[0], ptr);
                 for (int i = 0; i < Rsibling.size; i++)
-                    cursor.appenddata(Rsibling.key[i], Rsibling.ptr[i + 1]);
+                    cursor.appenddata(Rsibling.key[i], Rsibling.ptr[i + 1]),
+                    upd_parent(Rsibling.ptr[i + 1], ptr);
                 file.Delete(parent.ptr[sonid + 1]);
                 file.update(cursor, ptr);
                 deleteInternal(parentptr, sonid + 1);
@@ -239,6 +242,8 @@ class BPTdatabase {
                 data lastkey = Lsibling.key[Lsibling.size - 1];
                 int lastptr = Lsibling.ptr[Lsibling.size];
                 data head = parent.key[sonid - 1];
+                Lsibling.erase(Lsibling.size - 1, Lsibling.size);
+                upd_parent(lastptr, ptr);
                 cursor.push_frontdata(head, lastptr);
                 parent.key[sonid - 1] = lastkey;
                 file.update(Lsibling, parent.ptr[sonid - 1]);
@@ -249,8 +254,10 @@ class BPTdatabase {
             else {
                 data head = parent.key[sonid - 1];
                 Lsibling.appenddata(head, cursor.ptr[0]);
+                upd_parent(cursor.ptr[0], parent.ptr[sonid - 1]);
                 for (int i = 0; i < cursor.size; i++)
-                    Lsibling.appenddata(cursor.key[i], cursor.ptr[i + 1]);
+                    Lsibling.appenddata(cursor.key[i], cursor.ptr[i + 1]),
+                    upd_parent(cursor.ptr[i + 1], parent.ptr[sonid - 1]);
                 file.Delete(ptr);
                 file.update(Lsibling, parent.ptr[sonid - 1]);
                 deleteInternal(parentptr, sonid);
@@ -315,6 +322,7 @@ public:
         for (int i = 0; i < cursor.size; i++)
             if (cursor.key[i] == _data) pos = i;
         if (pos == -1) return; // not found
+        // std::cerr << "del find! \n"; 
         cursor.erase(pos, pos);
         if (cursor.parent == -1) {
             if (cursor.size == 0) {

@@ -52,7 +52,7 @@ public:
 int main() {
     int T; cin >> T;
     // is_cover: when submit, upd to 0
-    BPTdatabase<mystr, int, 0, 3> database("BPT");
+    BPTdatabase<mystr, int, 1, 3> database("BPT");
     while(T--) {
         // cerr << "opt done" << endl;
         string op; cin >> op;
