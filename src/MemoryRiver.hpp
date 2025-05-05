@@ -1,19 +1,24 @@
 #ifndef BPT_MEMORYRIVER_HPP
 #define BPT_MEMORYRIVER_HPP
 
+// #include <cassert>
 #include <fstream>
 #include <filesystem>
 #include <iostream>
+// #include <map>
 
 using std::string;
 using std::fstream;
 using std::ifstream;
 using std::ofstream;
 
+// using std::map;
+
 //sizeof(T) >= sizeof(int)!!
 template<class T, int info_len = 2>
 class MemoryRiver {
 private:
+    // map<int, int> mp;
     /* your code here */
     fstream file;
     string file_name;
@@ -73,6 +78,7 @@ public:
         int index = file.tellp();
         file.write(reinterpret_cast<char *>(&t), sizeof(T));
         file.close();
+        // mp[index] = 1;
         return index;
     }
     //用t的值更新位置索引index对应的对象，保证调用的index都是由write函数产生
@@ -85,6 +91,7 @@ public:
 
     //读出位置索引index对应的T对象的值并赋值给t，保证调用的index都是由write函数产生
     void read(T &t, const int index) {
+        // if (mp.find(index) == mp.end()) assert(0);
         file.open(file_name, std::ios::in);
         file.seekg(index,std::ios::beg);
         file.read(reinterpret_cast<char *>(&t), sizeof(T));
@@ -93,6 +100,8 @@ public:
 
     //删除位置索引index对应的对象(不涉及空间回收时，可忽略此函数)，保证调用的index都是由write函数产生
     void Delete(int index) {
+        // if (mp.find(index) == mp.end()) assert(0);
+        // mp.erase(mp.find(index));
         file.open(file_name, std::ios::out | std::ios::in);
         file.seekg(0, std::ios::beg);
         int head; file.read(reinterpret_cast<char *>(&head), sizeof(int));
