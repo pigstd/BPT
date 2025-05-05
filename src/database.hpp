@@ -32,8 +32,8 @@ class BPTdatabase {
         size_t size;
         data key[MAXB];
         int ptr[MAXB + 1];
-        int parent;
-        tree() : is_leaf(false), size(0), parent(-1) {
+        // int parent;
+        tree() : is_leaf(false), size(0) {
             for (int i = 0; i < MAXB; i++) key[i] = data();
             for (int i = 0; i <= MAXB; i++) ptr[i] = 0;
         }
@@ -87,6 +87,10 @@ class BPTdatabase {
             size--;
         }
     };
+    // 从根到节点的指针的 vector
+    vector<int> vecptr;
+    // 从根到节点的 tree
+    vector<tree> vectree;
     MemoryRiver<tree, 1> file;
     // 获得根
     int getrt() {
@@ -105,9 +109,9 @@ class BPTdatabase {
     //     file.update(son, ptr);
     // }
     // ptr 加入 (data, nptr)
-    void insertInternal(int ptr, data _data, int nptr) {
+    void insertInternal(int ptr, data _data, int nptr, int dep) {
         // std::cerr << "start insert internal\n";
-        tree cursor; file.read(cursor, ptr);
+        tree cursor = vectree[dep - 1];
         if (cursor.size + 1 < MAXB) {
             cursor.insertdata(_data, nptr);
             file.update(cursor, ptr);
@@ -116,11 +120,7 @@ class BPTdatabase {
         tree Ls, Rs;
         Ls.is_leaf = Rs.is_leaf = false;
         int ptrR = file.write(Rs);
-        // std::cerr << "!!! ptrR = " << ptrR << '\n';
         cursor.insertdata(_data, nptr);
-        // std::cerr << cursor.size << '\n';
-        // for (int i = 0; i <= cursor.size; i++) std::cerr << cursor.ptr[i] << ' ';
-        // std::cerr << '\n';
         // new key size = MAXB
         Ls.size = MAXB / 2, Rs.size = MAXB - 1 - MAXB / 2;
         data newkey = cursor.key[Ls.size];
@@ -128,27 +128,22 @@ class BPTdatabase {
         Ls.ptr[Ls.size] = cursor.ptr[Ls.size];
         for (int i = Ls.size + 1, j = 0; i < MAXB; i++, j++) {
             Rs.key[j] = cursor.key[i], Rs.ptr[j] = cursor.ptr[i];
-            // upd_parent(Rs.ptr[j], ptrR);
         }
         Rs.ptr[Rs.size] = cursor.ptr[cursor.size];
-        // upd_parent(Rs.ptr[Rs.size], ptrR);
-        if (cursor.parent == -1) {
+        if (dep == 1) {
             // cursor is root
             tree newroot; newroot.is_leaf = false;
             newroot.size = 1, newroot.key[0] = newkey;
             newroot.ptr[0] = ptr, newroot.ptr[1] = ptrR;
-            newroot.parent = -1;
             int rt = file.write(newroot);
             updrt(rt);
-            Ls.parent = Rs.parent = rt;
             file.update(Ls, ptr), file.update(Rs, ptrR);
             return;
         }
-        Ls.parent = Rs.parent = cursor.parent;
         file.update(Ls, ptr), file.update(Rs, ptrR);
-        insertInternal(cursor.parent, newkey, ptrR);
+        insertInternal(vecptr[dep - 1], newkey, ptrR, dep - 1);
     }
-    void split(int ptr, tree cursor, data _data) {
+    void split(int ptr, tree cursor, data _data, int dep) {
         tree Ls, Rs;
         Ls.is_leaf = Rs.is_leaf = true;
         int ptrR = file.write(Rs);
@@ -161,29 +156,26 @@ class BPTdatabase {
             if (i < Ls.size) Ls.key[i] = cursor.key[i];
             else Rs.key[i - Ls.size] = cursor.key[i];
         Ls.ptr[Ls.size] = ptrR; Rs.ptr[Rs.size] = cursor.ptr[cursor.size];
-        if (cursor.parent == -1) {
+        if (dep == 1) {
             // cursor is root
             tree newroot;
             newroot.is_leaf = false;
             newroot.size = 1;
             newroot.key[0] = Rs.key[0];
             newroot.ptr[0] = ptr, newroot.ptr[1] = ptrR;
-            newroot.parent = -1;
             int rt = file.write(newroot);
-            Ls.parent = Rs.parent = rt;
             updrt(rt);
             file.update(Ls, ptr);
             file.update(Rs, ptrR);
             return;
         }
-        Rs.parent = Ls.parent = cursor.parent;
         file.update(Ls, ptr), file.update(Rs, ptrR);
-        insertInternal(cursor.parent, Rs.key[0], ptrR);
+        insertInternal(vecptr[dep - 1], Rs.key[0], ptrR, dep - 1);
     }
     // 给 ptr 这个位置删去第 id 个指针(id >= 1) 和第 id-1 个 key
-    void deleteInternal(int ptr, int id) {
-        tree cursor; file.read(cursor, ptr);
-        if (cursor.parent == -1) {
+    void deleteInternal(int ptr, int id, int dep) {
+        tree cursor = vectree[dep - 1];
+        if (dep == 1) {
             // cursor is root
             if (cursor.size == 0) {
                 file.Delete(ptr);
@@ -207,8 +199,8 @@ class BPTdatabase {
             file.update(cursor, ptr);
             return;
         }
-        int parentptr = cursor.parent;
-        tree parent; file.read(parent, parentptr);
+        int parentptr = vecptr[dep - 1];
+        tree parent = vectree[dep - 2];
         int sonid = -1;
         for (int i = 0; i <= parent.size; i++)
             if (parent.ptr[i] == ptr) sonid = i;
@@ -225,7 +217,7 @@ class BPTdatabase {
                 parent.key[0] = firstkey;
                 file.update(Rsibling, parent.ptr[sonid + 1]);
                 file.update(cursor, ptr);
-                file.update(parent, cursor.parent);
+                file.update(parent, parentptr);
                 return;
             }
             else {
@@ -237,7 +229,7 @@ class BPTdatabase {
                     // upd_parent(Rsibling.ptr[i + 1], ptr);
                 file.Delete(parent.ptr[sonid + 1]);
                 file.update(cursor, ptr);
-                deleteInternal(parentptr, sonid + 1);
+                deleteInternal(parentptr, sonid + 1, dep - 1);
             }
         }
         else {
@@ -252,7 +244,7 @@ class BPTdatabase {
                 parent.key[sonid - 1] = lastkey;
                 file.update(Lsibling, parent.ptr[sonid - 1]);
                 file.update(cursor, ptr);
-                file.update(parent, cursor.parent);
+                file.update(parent, parentptr);
                 return;
             }
             else {
@@ -264,7 +256,7 @@ class BPTdatabase {
                     // upd_parent(cursor.ptr[i + 1], parent.ptr[sonid - 1]);
                 file.Delete(ptr);
                 file.update(Lsibling, parent.ptr[sonid - 1]);
-                deleteInternal(parentptr, sonid);
+                deleteInternal(parentptr, sonid, dep - 1);
             }
         }
     }
@@ -274,22 +266,23 @@ public:
     }
     void insert(const Key &key, const Value &value) {
         int rt = getrt();
-        // std::cerr << rt << std::endl;
         data _data(key, value);
         if (rt == -1) {
             tree newtree;
             newtree.is_leaf = 1;
             newtree.size = 1;
-            newtree.parent = -1;
+            // newtree.parent = -1;
             newtree.key[0] = _data;
             rt = file.write(newtree);
             updrt(rt);
             return;
         }
+        vecptr.clear(), vectree.clear();
+        vecptr.push_back(-1);
         tree cursor; file.read(cursor, rt);
-        if (cursor.parent != -1) cursor.parent = -1, file.update(cursor, rt);
         int ptr = rt;
         while(!cursor.is_leaf) {
+            vecptr.push_back(ptr), vectree.push_back(cursor);
             int pos = cursor.size;
             for (int i = 0; i < cursor.size; i++) {
                 if (_data < cursor.key[i]) {
@@ -297,46 +290,41 @@ public:
                     break;
                 }
             }
-            int parent = ptr;
             ptr = cursor.ptr[pos];
-            // std::cerr << ptr << ' ';
             file.read(cursor, ptr);
-            if (cursor.parent != ptr) cursor.parent = ptr, file.update(cursor, ptr);
         }
-        // std::cerr << "find!\n";
         if (cursor.size < MAXB - 1) {
             cursor.insertdata_leaf(_data);
             file.update(cursor, ptr);
             return;
         }
-        split(ptr, cursor, _data);
+        split(ptr, cursor, _data, vecptr.size());
     }
     void del(const Key &key, const Value &value) {
         int rt = getrt();
         data _data(key, value);
         if (rt == -1) return;
+        vecptr.clear(), vectree.clear();
+        vecptr.push_back(-1);
         tree cursor; file.read(cursor, rt);
-        if (cursor.parent != -1) cursor.parent = -1, file.update(cursor, rt);
         int ptr = rt;
         while(!cursor.is_leaf) {
+            vecptr.push_back(ptr), vectree.push_back(cursor);
             int pos = cursor.size;
             for (int i = 0; i < cursor.size; i++)
                 if (_data < cursor.key[i]) {
                     pos = i;
                     break;
                 }
-            int parent = ptr;
             ptr = cursor.ptr[pos];
             file.read(cursor, ptr);
-            if (cursor.parent != ptr) cursor.parent = ptr, file.update(cursor, ptr);
         }
         int pos = -1;
         for (int i = 0; i < cursor.size; i++)
             if (cursor.key[i] == _data) pos = i;
         if (pos == -1) return; // not found
-        // std::cerr << "del find! \n"; 
         cursor.erase(pos, pos);
-        if (cursor.parent == -1) {
+        if (vecptr.size() == 1) {
             if (cursor.size == 0) {
                 file.Delete(rt);
                 rt = -1;
@@ -349,7 +337,7 @@ public:
             file.update(cursor, ptr);
             return;
         }
-        tree parent; file.read(parent, cursor.parent);
+        tree parent; file.read(parent, vecptr.back());
         int sonid = -1;
         for (int i = 0; i <= parent.size; i++)
             if (parent.ptr[i] == ptr) sonid = i;
@@ -368,7 +356,7 @@ public:
                 parent.key[sonid] = Rsibling.key[0];
                 file.update(Rsibling, parent.ptr[sonid + 1]);
                 file.update(cursor, ptr);
-                file.update(parent, cursor.parent);
+                file.update(parent, vecptr.back());
                 return;
             }
             else {
@@ -379,7 +367,7 @@ public:
                 cursor.ptr[cursor.size] = Rsibling.ptr[Rsibling.size];
                 file.Delete(parent.ptr[sonid + 1]);
                 file.update(cursor, ptr);
-                deleteInternal(cursor.parent, sonid + 1);
+                deleteInternal(vecptr.back(), sonid + 1, vecptr.size() - 1);
             }
         }
         else {
@@ -391,7 +379,7 @@ public:
                 parent.key[sonid - 1] = cursor.key[0];
                 file.update(Lsibling, parent.ptr[sonid - 1]);
                 file.update(cursor, ptr);
-                file.update(parent, cursor.parent);
+                file.update(parent, vecptr.back());
                 return;
             }
             else {
@@ -402,7 +390,7 @@ public:
                 Lsibling.ptr[Lsibling.size] = cursor.ptr[cursor.size];
                 file.Delete(ptr);
                 file.update(Lsibling, parent.ptr[sonid - 1]);
-                deleteInternal(cursor.parent, sonid);
+                deleteInternal(vecptr.back(), sonid, vecptr.size() - 1);
             }
         }
     }
@@ -441,9 +429,9 @@ public:
         if (now == -1) return;
         assert(now != 0);
         tree t; file.read(t, now);
-        assert(t.parent == _parent);
+        // assert(t.parent == _parent);
         assert(t.size < MAXB);
-        std::cerr << "ptr = " << now << " parent = " << t.parent << 
+        std::cerr << "ptr = " << now << 
         ", is_leaf = " << t.is_leaf << ", size = " << t.size << '\n';
         std::cerr << "key: \n";
         for (int i = 0; i < t.size; i++)
