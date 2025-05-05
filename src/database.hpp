@@ -106,6 +106,7 @@ class BPTdatabase {
     }
     // ptr 加入 (data, nptr)
     void insertInternal(int ptr, data _data, int nptr) {
+        // std::cerr << "start insert internal\n";
         tree cursor; file.read(cursor, ptr);
         if (cursor.size + 1 < MAXB) {
             cursor.insertdata(_data, nptr);
@@ -117,6 +118,9 @@ class BPTdatabase {
         int ptrR = file.write(Rs);
         // std::cerr << "!!! ptrR = " << ptrR << '\n';
         cursor.insertdata(_data, nptr);
+        // std::cerr << cursor.size << '\n';
+        // for (int i = 0; i <= cursor.size; i++) std::cerr << cursor.ptr[i] << ' ';
+        // std::cerr << '\n';
         // new key size = MAXB
         Ls.size = MAXB / 2, Rs.size = MAXB - 1 - MAXB / 2;
         data newkey = cursor.key[Ls.size];
@@ -199,7 +203,7 @@ class BPTdatabase {
         }
         // std::cerr << "delInternal " << ptr << ' ' << id << '\n';
         cursor.erase(id - 1, id);
-        if (cursor.size >= MAXB / 2) {
+        if (cursor.size >= (MAXB - 1) / 2) {
             file.update(cursor, ptr);
             return;
         }
@@ -211,7 +215,7 @@ class BPTdatabase {
         assert(sonid != -1);
         if (sonid == 0) {
             tree Rsibling; file.read(Rsibling, parent.ptr[sonid + 1]);
-            if (Rsibling.size >= MAXB / 2 + 1) {
+            if (Rsibling.size >= (MAXB - 1) / 2 + 1) {
                 data firstkey = Rsibling.key[0];
                 int firstptr = Rsibling.ptr[0];
                 data head = parent.key[0];
@@ -238,7 +242,7 @@ class BPTdatabase {
         }
         else {
             tree Lsibling; file.read(Lsibling, parent.ptr[sonid - 1]);
-            if (Lsibling.size >= MAXB / 2 + 1) {
+            if (Lsibling.size >= (MAXB - 1) / 2 + 1) {
                 data lastkey = Lsibling.key[Lsibling.size - 1];
                 int lastptr = Lsibling.ptr[Lsibling.size];
                 data head = parent.key[sonid - 1];
@@ -293,8 +297,10 @@ public:
                 }
             }
             ptr = cursor.ptr[pos];
+            // std::cerr << ptr << ' ';
             file.read(cursor, ptr);
         }
+        // std::cerr << "find!\n";
         if (cursor.size < MAXB - 1) {
             cursor.insertdata_leaf(_data);
             file.update(cursor, ptr);
@@ -333,7 +339,7 @@ public:
             else file.update(cursor, rt);
             return;
         }
-        if (cursor.size >= MAXB / 2) {
+        if (cursor.size >= (MAXB - 1) / 2) {
             file.update(cursor, ptr);
             return;
         }
@@ -346,7 +352,7 @@ public:
         // std::cerr << cursor.size << ' ' << cursor.ptr[0] << '\n';
         if (sonid == 0) {
             tree Rsibling; file.read(Rsibling, parent.ptr[sonid + 1]);
-            if (Rsibling.size >= MAXB / 2 + 1) {
+            if (Rsibling.size >= (MAXB - 1) / 2 + 1) {
                 data first = Rsibling.key[0];
                 Rsibling.erase(0, 0);
                 // std::cerr << "Case!! " << cursor.size << ' ' << cursor.ptr[cursor.size] << '\n';
@@ -372,7 +378,7 @@ public:
         }
         else {
             tree Lsibling; file.read(Lsibling, parent.ptr[sonid - 1]);
-            if (Lsibling.size >= MAXB / 2 + 1) {
+            if (Lsibling.size >= (MAXB - 1) / 2 + 1) {
                 data last = Lsibling.key[Lsibling.size - 1];
                 Lsibling.erase(Lsibling.size - 1, Lsibling.size - 1);
                 cursor.push_frontdata(last);
@@ -425,9 +431,12 @@ public:
         return res;
     }
     // debug 的时候使用，输出整个树的结构
-    void print_tree(int now) {
+    void print_tree(int now, int _parent = -1) {
         if (now == -1) return;
+        assert(now != 0);
         tree t; file.read(t, now);
+        assert(t.parent == _parent);
+        assert(t.size < MAXB);
         std::cerr << "ptr = " << now << " parent = " << t.parent << 
         ", is_leaf = " << t.is_leaf << ", size = " << t.size << '\n';
         std::cerr << "key: \n";
@@ -440,7 +449,7 @@ public:
         std::cerr << "\n";
         if (!t.is_leaf) {
             for (int i = 0; i <= t.size; i++)
-                print_tree(t.ptr[i]);
+                print_tree(t.ptr[i], now);
         }
     }
     // debug 的时候使用，输出整个树的结构
