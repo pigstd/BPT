@@ -76,14 +76,12 @@ public:
     //位置索引index可以取为对象写入的起始位置
     int write(T &t) {
         file.open(file_name, std::ios::out | std::ios::in);
-        int head; file.seekg(0, std::ios::beg);
-        file.read(reinterpret_cast<char *>(&head), sizeof(int));
+        int head; get_info(head, 0);
         if (head == 0) file.seekp(0, std::ios::end);
         else {
             file.seekg(head, std::ios::beg);
             int nxtpos; file.read(reinterpret_cast<char *>(&nxtpos), sizeof(int));
-            file.seekp(0, std::ios::beg);
-            file.write(reinterpret_cast<char *>(&nxtpos), sizeof(int));
+            write_info(head, 0);
             file.seekp(head, std::ios::beg);
         }
         int index = file.tellp();
@@ -117,10 +115,8 @@ public:
         // if (mp.find(index) == mp.end()) assert(0);
         // mp.erase(mp.find(index));
         file.open(file_name, std::ios::out | std::ios::in);
-        file.seekg(0, std::ios::beg);
-        int head; file.read(reinterpret_cast<char *>(&head), sizeof(int));
-        file.seekp(0, std::ios::beg);
-        file.write(reinterpret_cast<char *>(&index), sizeof(int));
+        int head; get_info(head, 0);
+        write_info(index, 0);
         file.seekp(index, std::ios::beg);
         file.write(reinterpret_cast<char *>(&head), sizeof(int));
         file.close();
