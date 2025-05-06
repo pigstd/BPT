@@ -52,11 +52,11 @@ public:
 #define ll long long
 #define i128 __int128
 
-const i128 Mod = 99234523452349217;
-const i128 base = 998244353;
+const ll Mod = 1e9 + 7;
+const ll base = 998244353;
 
-ll hs(string s) {
-    i128 hs = 0;
+int hs(string s) {
+    ll hs = 0;
     for (auto ch : s)
         hs = (hs * base + (int)(ch) + 1) % Mod;
     return hs;
@@ -66,7 +66,7 @@ int main() {
     cin.sync_with_stdio(false), cin.tie(0);
     int T; cin >> T;
     // is_cover: when submit, upd to 0
-    BPTdatabase<ll, int, 0, 233> database("BPT");
+    BPTdatabase<int, int, 0, 115> database("BPT");
     while(T--) {
         string op; cin >> op;
         // cerr << "opt done" << T << ' ' << op << '\n';
