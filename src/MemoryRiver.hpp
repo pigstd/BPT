@@ -81,7 +81,7 @@ public:
         else {
             file.seekg(head, std::ios::beg);
             int nxtpos; file.read(reinterpret_cast<char *>(&nxtpos), sizeof(int));
-            write_info(head, 0);
+            write_info(nxtpos, 0);
             file.seekp(head, std::ios::beg);
         }
         int index = file.tellp();
