@@ -26,38 +26,49 @@ private:
 public:
     MemoryRiver() = default;
 
+    int a[info_len + 1];
+
     MemoryRiver(const string& file_name) : file_name(file_name) {}
     // num 初始填入的数字 is_cover 是否强制覆盖
     void initialise(string FN = "", int num = 0, int is_cover = 1) {
         if (FN != "") file_name = FN;
         // 如果存在文件，就不修改，视情况选择是否强制覆盖
         // is_cover = 1 强制覆盖
-        if (is_cover == 0 && std::filesystem::exists(file_name)) return;
+        if (is_cover == 0 && std::filesystem::exists(file_name)) {
+            file.open(file_name, std::ios::in);
+            for (int i = 0; i <= info_len; i++)
+                file.seekg(i * sizeof(int), std::ios::beg),
+                file.read(reinterpret_cast<char *>(&a[i]), sizeof(int));
+            return;
+        }
         // std::cerr << "cover: " << file_name << '\n';
         file.open(file_name, std::ios::out);
         int _head = 0;
         file.write(reinterpret_cast<char *>(&_head), sizeof(int));
+        a[0] = 0;
         for (int i = 0; i < info_len; ++i)
-            file.write(reinterpret_cast<char *>(&num), sizeof(int));
+            file.write(reinterpret_cast<char *>(&num), sizeof(int)), a[i + 1] = num;
         file.close();
     }
 
     //读出第n个int的值赋给tmp，1_base
     void get_info(int &tmp, int n) {
         if (n > info_len) return;
-        file.open(file_name, std::ios::in);
-        file.seekg(n * sizeof(int), std::ios::beg);
-        file.read(reinterpret_cast<char *>(&tmp), sizeof(int));
-        file.close();
+        tmp = a[n];
+        // file.open(file_name, std::ios::in);
+        // file.seekg(n * sizeof(int), std::ios::beg);
+        // file.read(reinterpret_cast<char *>(&tmp), sizeof(int));
+        // file.close();
     }
 
     //将tmp写入第n个int的位置，1_base
     void write_info(int tmp, int n) {
         if (n > info_len) return;
-        file.open(file_name, std::ios::out | std::ios::in);
-        file.seekp(n * sizeof(int), std::ios::beg);
-        file.write(reinterpret_cast<char *>(&tmp), sizeof(int));
-        file.close();
+        a[n] = tmp;
+        // file.open(file_name, std::ios::out | std::ios::in);
+        // file.seekp(n * sizeof(int), std::ios::beg);
+        // file.write(reinterpret_cast<char *>(&tmp), sizeof(int));
+        // file.close();
     }
 
     //在文件合适位置写入类对象t，并返回写入的位置索引index
@@ -112,6 +123,13 @@ public:
         file.write(reinterpret_cast<char *>(&index), sizeof(int));
         file.seekp(index, std::ios::beg);
         file.write(reinterpret_cast<char *>(&head), sizeof(int));
+        file.close();
+    }
+    ~MemoryRiver() {
+        file.open(file_name, std::ios::out | std::ios::in);
+        for (int i = 0; i <= info_len; i++)
+            file.seekp(i * sizeof(int), std::ios::beg),
+            file.write(reinterpret_cast<char *>(&a[i]), sizeof(int));
         file.close();
     }
 };
