@@ -39,6 +39,7 @@ public:
             for (int i = 0; i <= info_len; i++)
                 file.seekg(i * sizeof(int), std::ios::beg),
                 file.read(reinterpret_cast<char *>(&a[i]), sizeof(int));
+            file.close();
             return;
         }
         // std::cerr << "cover: " << file_name << '\n';
