@@ -5,11 +5,11 @@ cd gen
 g++ gen.cpp -o gen
 
 
-./gen $1 > ../testdata/4.in
+./gen $1 > ../test/4.in
 
 echo generated
 
-cd .. && cd testdata
+cd .. && cd test
 
 g++ brute.cpp -o brute
 
@@ -19,7 +19,7 @@ echo brute done
 
 cd .. && cd build
 
-cmake .. && make && time ./code < ../testdata/4.in > BPT.out
+cmake .. && make && time ./code < ../test/4.in > BPT.out
 
 diff BPT.out brute.out
 
