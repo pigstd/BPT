@@ -211,7 +211,7 @@ public:
 	vector() : Size(0), Capability(4) {
 		MemoryData = operator new (Capability * sizeof(T));
 	}
-	vector(const vector &other) : Size(other.Size), Capability(other.Size), MemoryData(nullptr) {
+	vector(const vector &other) : Size(other.Size), Capability(other.Capability), MemoryData(nullptr) {
 		MemoryData = operator new (Capability * sizeof(T));
 		for (int i = 0; i < Size; i++)
 			new (static_cast<T*>(MemoryData) + i) T(other[i]);
