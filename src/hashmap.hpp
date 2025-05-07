@@ -6,6 +6,7 @@
 // 直接使用 vector，将 int 对 mod 取模
 
 #include "vector.hpp"
+#include <cassert>
 
 using sjtu::vector;
 
@@ -34,6 +35,7 @@ public:
                 return;
             }
         }
+        assert(0);
     }
     void insert(int index, valuename *ptr) {
         int _index = index % mod;

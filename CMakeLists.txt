@@ -13,5 +13,5 @@ add_executable(code
 )
 
 # 调试时可以打开，用来测指针的问题
-# target_compile_options(code PRIVATE -fsanitize=address)
-# target_link_libraries(code PRIVATE -fsanitize=address)
+# target_compile_options(code PRIVATE -fsanitize=address,leak,undefined)
+# target_link_libraries(code PRIVATE -fsanitize=address,leak,undefined)
