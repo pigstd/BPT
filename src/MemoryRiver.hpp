@@ -22,12 +22,10 @@ private:
     /* your code here */
     fstream file;
     string file_name;
+    int a[info_len + 1];
     // int sizeofT = sizeof(T);
 public:
     MemoryRiver() = default;
-
-    int a[info_len + 1];
-
     MemoryRiver(const string& file_name) : file_name(file_name) {}
     // num 初始填入的数字 is_cover 是否强制覆盖
     void initialise(string FN = "", int num = 0, int is_cover = 1) {

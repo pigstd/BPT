@@ -4,6 +4,7 @@
 // Using B+ tree as database
 
 #include "MemoryRiver.hpp"
+#include "MR_with_cache.hpp"
 #include "vector.hpp"
 #include <cstddef>
 #include <cassert>
@@ -91,7 +92,7 @@ class BPTdatabase {
     vector<int> vecptr;
     // 从根到节点的 tree
     vector<tree> vectree;
-    MemoryRiver<tree, 1> file;
+    MR_with_cache<tree, 1> file;
     int rt;
     // 获得根
     int getrt() {
