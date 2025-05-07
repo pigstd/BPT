@@ -20,6 +20,9 @@ private:
     };
     vector<data> a[mod];
 public:
+    hashmap() {
+        for (int i = 0; i < mod; i++) a[i] = vector<data>();
+    }
     valuename *find(int index) {
         int _index = index % mod;
         for (auto p = a[_index].begin(); p != a[_index].end(); p++) {

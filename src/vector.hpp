@@ -234,7 +234,7 @@ public:
 			this->operator[](i).~T();
 		operator delete(MemoryData);
 
-		Size = other.Size, Capability = other.Size;
+		Size = other.Size, Capability = other.Capability;
 		MemoryData = operator new(sizeof(T) * Capability);
 		for (int i = 0; i < Size; i++)
 			new (static_cast<T*>(MemoryData) + i) T(other[i]);

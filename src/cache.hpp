@@ -10,6 +10,7 @@
 #include <cassert>
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <ratio>
 #include "hashmap.hpp"
 

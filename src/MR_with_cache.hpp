@@ -9,7 +9,7 @@
 
 using std::string;
 
-template<class T, int info_len = 2, int MAXSIZE = 16>
+template<class T, int info_len = 2, int MAXSIZE = 128>
 class MR_with_cache {
     MemoryRiver<T, info_len> MR;
     buffer<T, MAXSIZE> Buffer;
