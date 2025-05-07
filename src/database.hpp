@@ -199,7 +199,7 @@ class BPTdatabase {
         }
         // std::cerr << "delInternal " << ptr << ' ' << id << '\n';
         cursor.erase(id - 1, id);
-        if (cursor.size >= (MAXB - 1) / 3) {
+        if (cursor.size >= (MAXB - 1) / 2) {
             file.update(cursor, ptr);
             return;
         }
@@ -211,7 +211,7 @@ class BPTdatabase {
         assert(sonid != -1);
         if (sonid == 0) {
             tree Rsibling; file.read(Rsibling, parent.ptr[sonid + 1]);
-            if (Rsibling.size >= (MAXB - 1) / 3 + 1) {
+            if (Rsibling.size >= (MAXB - 1) / 2 + 1) {
                 data firstkey = Rsibling.key[0];
                 int firstptr = Rsibling.ptr[0];
                 data head = parent.key[0];
@@ -238,7 +238,7 @@ class BPTdatabase {
         }
         else {
             tree Lsibling; file.read(Lsibling, parent.ptr[sonid - 1]);
-            if (Lsibling.size >= (MAXB - 1) / 3 + 1) {
+            if (Lsibling.size >= (MAXB - 1) / 2 + 1) {
                 data lastkey = Lsibling.key[Lsibling.size - 1];
                 int lastptr = Lsibling.ptr[Lsibling.size];
                 data head = parent.key[sonid - 1];
@@ -341,7 +341,7 @@ public:
             else file.update(cursor, rt);
             return;
         }
-        if (cursor.size >= (MAXB - 1) / 3) {
+        if (cursor.size >= (MAXB - 1) / 2) {
             file.update(cursor, ptr);
             return;
         }
@@ -354,7 +354,7 @@ public:
         // std::cerr << cursor.size << ' ' << cursor.ptr[0] << '\n';
         if (sonid == 0) {
             tree Rsibling; file.read(Rsibling, parent.ptr[sonid + 1]);
-            if (Rsibling.size >= (MAXB - 1) / 3 + 1) {
+            if (Rsibling.size >= (MAXB - 1) / 2 + 1) {
                 data first = Rsibling.key[0];
                 Rsibling.erase(0, 0);
                 // std::cerr << "Case!! " << cursor.size << ' ' << cursor.ptr[cursor.size] << '\n';
@@ -380,7 +380,7 @@ public:
         }
         else {
             tree Lsibling; file.read(Lsibling, parent.ptr[sonid - 1]);
-            if (Lsibling.size >= (MAXB - 1) / 3 + 1) {
+            if (Lsibling.size >= (MAXB - 1) / 2 + 1) {
                 data last = Lsibling.key[Lsibling.size - 1];
                 Lsibling.erase(Lsibling.size - 1, Lsibling.size - 1);
                 cursor.push_frontdata(last);

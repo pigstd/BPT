@@ -19,7 +19,7 @@ echo brute done
 
 cd .. && cd build
 
-cmake .. && make && time ./code < ../test/4.in > BPT.out
+cmake .. && make && time valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./code < ../test/4.in > BPT.out
 
 diff BPT.out brute.out
 
