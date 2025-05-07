@@ -56,6 +56,7 @@ public:
     }
     // 将 ptr 指针设置为 head
     void set_head(List *ptr) {
+        assert(_head != nullptr);
         if (ptr == _head) return;
         ptr->front->next = ptr->next;
         if (ptr->next != nullptr)
@@ -72,16 +73,16 @@ public:
     void erase_List(List *p) {
         Size--;
         mp.erase(p->value.index);
+        if (p == _head) _head = p->next;
+        if (p == _end) _end = p->front;
+        if (p->next != nullptr) p->next->front = p->front;
+        if (p->front != nullptr) p->front->next = p->next;
         delete p;
     }
     void popend() {
         // Size != 1
         assert(_end != nullptr);
-        List *tmp = _end;
-        _end = _end->front;
-        if (_end != nullptr) _end->next = nullptr;
-        else _head = nullptr;
-        erase_List(tmp);
+        erase_List(_end);
     }
     void insert(const int &index, const datatype &_data) {
         Size++;
